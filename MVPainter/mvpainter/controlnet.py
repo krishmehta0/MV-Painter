@@ -19,18 +19,18 @@ from torch import nn
 from torch.nn import functional as F
 
 from diffusers.configuration_utils import ConfigMixin, register_to_config
-from diffusers.loaders import FromOriginalControlnetMixin
+from diffusers.loaders import FromOriginalModelMixin
 from diffusers.utils import BaseOutput, logging
 from diffusers.models.attention_processor import AttentionProcessor, AttnProcessor
 from diffusers.models.embeddings import TextImageProjection, TextImageTimeEmbedding, TextTimeEmbedding, TimestepEmbedding, Timesteps
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.unet_2d_blocks import (
+from diffusers.models.unets.unet_2d_blocks import (
     CrossAttnDownBlock2D,
     DownBlock2D,
     UNetMidBlock2DCrossAttn,
     get_down_block,
 )
-from diffusers.models.unet_2d_condition import UNet2DConditionModel
+from diffusers.models.unets.unet_2d_condition import UNet2DConditionModel
 from collections import OrderedDict
 
 
@@ -97,7 +97,7 @@ class ControlNetOutput(BaseOutput):
 class ControlNetConditioningEmbedding(nn.Module):
     """
     Quoting from https://arxiv.org/abs/2302.05543: "Stable Diffusion uses a pre-processing method similar to VQ-GAN
-    [11] to convert the entire dataset of 512 × 512 images into smaller 64 × 64 “latent images” for stabilized
+    [11] to convert the entire dataset of 512 × 512 images into smaller 64 × 64 "latent images" for stabilized
     training. This requires ControlNets to convert image-based conditions to 64 × 64 feature space to match the
     convolution size. We use a tiny network E(·) of four convolution layers with 4 × 4 kernels and 2 × 2 strides
     (activated by ReLU, channels are 16, 32, 64, 128, initialized with Gaussian weights, trained jointly with the full
@@ -139,7 +139,7 @@ class ControlNetConditioningEmbedding(nn.Module):
         return embedding
 
 
-class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalControlnetMixin):
+class ControlNetModel_Union(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     """
     A ControlNet model.
 

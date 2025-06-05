@@ -36,8 +36,28 @@ for glb_file in glb_files:
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
     #import glb
-    bpy.ops.import_scene.gltf(filepath=glb_file)
-
+    import logging
+    logging.disable(logging.DEBUG)
+    
+    try:
+        # First attempt: Import without any optional parameters that might trigger debug logging
+        bpy.ops.import_scene.gltf(filepath=glb_file)
+    except Exception as e:
+        print(f"GLTF import failed with basic parameters for {glb_file}: {e}")
+        
+        # Second attempt: Try to set Blender app debug value to prevent logging issues
+        try:
+            original_debug = bpy.app.debug_value
+            bpy.app.debug_value = 0
+            bpy.ops.import_scene.gltf(filepath=glb_file)
+            bpy.app.debug_value = original_debug
+        except Exception as e2:
+            print(f"GLTF import failed with debug disabled for {glb_file}: {e2}")
+            logging.disable(logging.NOTSET)
+            continue
+    
+    # Re-enable logging
+    logging.disable(logging.NOTSET)
 
     for material in bpy.data.materials:
         if not material.node_tree:

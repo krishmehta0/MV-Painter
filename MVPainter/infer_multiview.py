@@ -140,7 +140,7 @@ def infer(pipeline, obj_path, image_file, filenames=['000.png', '005.png', '001.
 
     cmds = [f'{blender_path}', '--background', '-Y',
             '--python',
-            'scripts/blender_render_ortho.py', '--',
+            os.path.join(os.path.dirname(__file__), 'scripts', 'blender_render_ortho.py'), '--',
             '--object_path', f'{obj_path}',
             '--geo_rotation',f'{args.geo_rotation}'
             ]

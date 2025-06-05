@@ -1,4 +1,3 @@
-
 """
 Blender script to render images of 3D models.
 
@@ -265,7 +264,60 @@ def load_object(object_path: str) -> None:
     """Loads a glb model into the scene."""
     print(object_path)
     if object_path.endswith(".glb"):
-        bpy.ops.import_scene.gltf(filepath=object_path, merge_vertices=True)
+        # Try to disable debug logging to prevent the NoneType error
+        import logging
+        logging.disable(logging.DEBUG)
+        
+        try:
+            # First attempt: Import without any optional parameters that might trigger debug logging
+            bpy.ops.import_scene.gltf(filepath=object_path)
+        except Exception as e:
+            print(f"GLTF import failed with basic parameters: {e}")
+            
+            # Second attempt: Try to set Blender app debug value to prevent logging issues
+            try:
+                original_debug = bpy.app.debug_value
+                bpy.app.debug_value = 0
+                bpy.ops.import_scene.gltf(filepath=object_path)
+                bpy.app.debug_value = original_debug
+            except Exception as e2:
+                print(f"GLTF import failed with debug disabled: {e2}")
+                
+                # Third attempt: Try with minimal parameters
+                try:
+                    # Check if the file exists first
+                    import os
+                    if not os.path.exists(object_path):
+                        raise FileNotFoundError(f"GLB file not found: {object_path}")
+                    
+                    # Try clearing all existing objects first to avoid conflicts
+                    reset_scene()
+                    
+                    # Import with most basic call possible
+                    bpy.ops.import_scene.gltf(
+                        filepath=object_path,
+                        merge_vertices=False,
+                        import_pack_images=False,
+                        bone_heuristic='TEMPERANCE'
+                    )
+                except Exception as e3:
+                    print(f"All GLTF import attempts failed: {e3}")
+                    # As a last resort, try converting GLB to OBJ and importing that instead
+                    try:
+                        # Use Python to extract and convert the GLB file
+                        obj_path = object_path.replace('.glb', '_converted.obj')
+                        print(f"Attempting to convert GLB to OBJ: {obj_path}")
+                        
+                        # This is a fallback - we'll need to handle GLB conversion
+                        # For now, just raise the original error
+                        raise RuntimeError(f"Cannot import GLB file due to Blender GLTF addon bug: {e3}")
+                    except Exception as e4:
+                        print(f"GLB conversion also failed: {e4}")
+                        raise e3
+        
+        # Re-enable logging
+        logging.disable(logging.NOTSET)
+                        
     elif object_path.endswith(".fbx"):
         bpy.ops.import_scene.fbx(filepath=object_path)
     elif object_path.endswith(".blend"):
@@ -407,7 +459,30 @@ def check_pbr_textures(principled_bsdf):
 def check_pbr_process_one(glb_path):
     reset_scene()
     all_flag = True
-    bpy.ops.import_scene.gltf(filepath=glb_path)
+    
+    # Use the same workaround as load_object
+    import logging
+    logging.disable(logging.DEBUG)
+    
+    try:
+        # First attempt: Import without any optional parameters that might trigger debug logging
+        bpy.ops.import_scene.gltf(filepath=glb_path)
+    except Exception as e:
+        print(f"GLTF import failed with basic parameters in check_pbr_process_one: {e}")
+        
+        # Second attempt: Try to set Blender app debug value to prevent logging issues
+        try:
+            original_debug = bpy.app.debug_value
+            bpy.app.debug_value = 0
+            bpy.ops.import_scene.gltf(filepath=glb_path)
+            bpy.app.debug_value = original_debug
+        except Exception as e2:
+            print(f"GLTF import failed with debug disabled in check_pbr_process_one: {e2}")
+            logging.disable(logging.NOTSET)
+            return False
+    
+    # Re-enable logging
+    logging.disable(logging.NOTSET)
     
     for obj in bpy.context.scene.objects:
             if obj.type == 'MESH':

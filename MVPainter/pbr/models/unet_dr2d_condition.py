@@ -36,7 +36,7 @@ from diffusers.models.embeddings import (
     Timesteps,
 )
 from diffusers.models.modeling_utils import ModelMixin, load_state_dict, _load_state_dict_into_model
-from diffusers.models.unet_2d_blocks import (
+from diffusers.models.unets.unet_2d_blocks import (
     CrossAttnDownBlock2D,
     CrossAttnUpBlock2D,
     DownBlock2D,
@@ -1254,7 +1254,7 @@ class UNetDR2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixi
             "CrossAttnUpBlockDR2D"
         ]
 
-        config['camera_embedding_type'] = camera_embedding_type # 'class label' or '4DoF‘
+        config['camera_embedding_type'] = camera_embedding_type # 'class label' or '4DoF'
         config['projection_class_embeddings_input_dim'] = projection_class_embeddings_input_dim # default 6
 
         # load model

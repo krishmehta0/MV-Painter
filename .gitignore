@@ -11,11 +11,22 @@ ossutil_output
 mvpainter/custom_rasterizer/build/
 mvpainter/differentiable_renderer/dist/
 
-# *.png
-*.glb
-*.pyc
+# Generated models and outputs
+MVPainter/generated_models/
 
+# Build artifacts
+*.egg-info/
+build/
+dist/
 *.so
 *.o
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# *.png
+*.glb
 
 

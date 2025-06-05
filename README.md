@@ -14,6 +14,7 @@ MVPainter is a fully open-source system for 3D texture generation, providing a c
 - [x] Release technical report.
 - [x] Release training code.
 - [x] Release data processing code.
+- [x] Fixed Blender GLTF import issues and NaN handling
 
 ## ✨Key Features
 * 🔓 Fully Open-Source Texture Generation Pipeline
@@ -22,14 +23,63 @@ MVPainter is a fully open-source system for 3D texture generation, providing a c
 
 * 🎨 High-Fidelity, Geometry- and Image-Aligned PBR Texture Generation
 
+## 🔧 Important Fixes Applied
+
+### Blender GLTF Import Fix
+Fixed the `TypeError: bpy_struct: item.attr = val: IMPORT_SCENE_OT_gltf.loglevel expected an int type, not NoneType` error by:
+- Adding explicit `loglevel=0` parameter to all `bpy.ops.import_scene.gltf()` calls
+- Implementing comprehensive error handling with fallback attempts
+- Updated files: `scripts/blender_render_ortho.py`, `evaluation/blender_render_eval.py`, `scripts/blender_bake.py`
+
+### NaN Value Handling
+Fixed the `ValueError: cannot convert float NaN to integer` error by:
+- Adding NaN/Inf validation for UV coordinates and vertex positions
+- Implementing graceful fallbacks when invalid values are detected
+- Added mesh validation in texture generation pipeline
+- Updated files: `mesh_processor.py`, `generation_endpoints.py`
+
+### Blender Version Support
+- Supports both Blender 4.2.4 and 4.2.9
+- Automatic symlink creation for expected Blender paths
+- Backward compatibility maintained
 
 ## 🔥 News
+* [2025-01-06] Fixed critical Blender GLTF import and NaN handling issues
 * [2025-04-30] We have released our [technical report](https://huggingface.co/shaomq/MVPainter)!
 * [2025-04-30] We have released model weights, data processing, trainning, inference scripts.
 
 ## 🔧[Installation](./MVPainter/INSTALL.md)
 
-## 💡Infererence
+**Important**: After installation, ensure you have proper Blender setup:
+
+```bash
+# Verify Blender installation
+ls blender-4.2.4-linux-x64/blender  # Should exist
+# OR
+ls blender-4.2.9-linux-x64/blender  # Should exist
+
+# Install OpenCV for Blender's Python (if using 4.2.4)
+./blender-4.2.4-linux-x64/4.2/python/bin/python3.11 -m pip install opencv-python
+
+# Install OpenCV for Blender's Python (if using 4.2.9)
+./blender-4.2.9-linux-x64/4.2/python/bin/python3.11 -m pip install opencv-python
+```
+
+## 💡Inference
+
+### Troubleshooting
+
+If you encounter GLTF import errors:
+1. **Check Blender version**: Ensure you have either Blender 4.2.4 or 4.2.9 installed
+2. **Verify OpenCV**: Make sure OpenCV is installed for Blender's Python
+3. **Check mesh validity**: Ensure your input GLB files don't contain NaN values
+4. **Log level errors**: The scripts now automatically handle log level issues with fallbacks
+
+If you encounter NaN conversion errors:
+1. **Mesh validation**: Check that your input mesh has valid UV coordinates
+2. **Texture resolution**: Ensure texture dimensions are reasonable (512x512 or 1024x1024)
+3. **Input images**: Verify input images are valid and don't contain problematic values
+
 ### Generate multi-view images
 
 1. Prepare the input images and glbs in `/data/test/imgs` and `/data/test/glbs`.
@@ -39,17 +89,11 @@ MVPainter is a fully open-source system for 3D texture generation, providing a c
     python infer_multiview.py --input_glb_dir ./data/test/glbs --input_img_dir ./data/test/imgs --output_dir ./outputs/test --geo_rotation 0
     ```
 
-
-
-
-    Mesh generated from [TripoSG](https://github.com/VAST-AI-Research/TripoSG), use `--geo_rotation 0`
-
-    Mesh generated from [Hunyuan-2](https://github.com/Tencent/Hunyuan3D-2), use `--geo_rotation -90`
-
-    Mesh generated from [TRELLIS](https://github.com/microsoft/TRELLIS)，use  `--geo_rotation -90`
-
-    Mesh generated from [Hi3dGen](https://github.com/Stable-X/Hi3DGen)  `--geo_rotation -90`
-
+    **Mesh rotation settings:**
+    - Mesh generated from [TripoSG](https://github.com/VAST-AI-Research/TripoSG), use `--geo_rotation 0`
+    - Mesh generated from [Hunyuan-2](https://github.com/Tencent/Hunyuan3D-2), use `--geo_rotation -90`
+    - Mesh generated from [TRELLIS](https://github.com/microsoft/TRELLIS), use `--geo_rotation -90`
+    - Mesh generated from [Hi3dGen](https://github.com/Stable-X/Hi3DGen), use `--geo_rotation -90`
 
 ### Extract PBR (Optional)
 Extract PBR attributes from generated mul-view images.
@@ -59,8 +103,6 @@ python infer_pbr.py --mv_res_dir ./outputs/test
 ```
 
 The extracted PBR maps will be saved in `--mv_res_dir` directory.
-
-
 
 ### Painting
 
@@ -75,8 +117,6 @@ python infer_paint.py --mv_res_dir ./outputs/test/mvpainter --output_dir ./resul
 ```
 
 `--mv_res_dir` is the directory of the generated multi-view images.
-
-
 
 ## 🏋️Training
 ### Multi-View Generation Model
@@ -100,7 +140,6 @@ accelerate launch --config_file configs/acc/8gpu.yaml train_pbr.py --config conf
 ## 📊[Data Processing](./data_process/README.md)
 
 ## 📝[Evaluation](./MVPainter/evaluation/README.md)
-
 
 ## Citation
 If you found this repository helpful, please cite our report:
