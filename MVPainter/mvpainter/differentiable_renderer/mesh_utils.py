@@ -23,6 +23,7 @@
 # by Tencent in accordance with TENCENT HUNYUAN COMMUNITY LICENSE AGREEMENT.
 
 import trimesh
+import numpy as np
 
 
 def load_mesh(mesh):
@@ -31,6 +32,25 @@ def load_mesh(mesh):
 
     vtx_uv = mesh.visual.uv if hasattr(mesh.visual, 'uv') else None
     uv_idx = mesh.faces if hasattr(mesh, 'faces') else None
+
+    # Validate and fix UV coordinates if they exist
+    if vtx_uv is not None:
+        # Check for NaN or infinite values
+        if np.any(np.isnan(vtx_uv)) or np.any(np.isinf(vtx_uv)):
+            print("Warning: Invalid UV coordinates detected in mesh. Cleaning up...")
+            
+            # Replace NaN/inf values with valid UV coordinates
+            vtx_uv = np.where(np.isfinite(vtx_uv), vtx_uv, 0.5)
+            
+            # Clamp UV coordinates to valid range [0, 1]
+            vtx_uv = np.clip(vtx_uv, 0.0, 1.0)
+            
+            print(f"UV coordinates cleaned. Shape: {vtx_uv.shape}")
+        
+        # Ensure UV coordinates are in valid range
+        if np.any((vtx_uv < 0.0) | (vtx_uv > 1.0)):
+            print("Warning: UV coordinates out of range [0,1]. Clamping...")
+            vtx_uv = np.clip(vtx_uv, 0.0, 1.0)
 
     texture_data = None
 
